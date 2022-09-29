@@ -55,7 +55,7 @@ def upload_file():
             file_loop(root, dirs, xfiles)
 
         #método que irá ler o arquivo e mandar a I.A. predizer
-        model = tf.keras.models.load_model('/content/modelo.h5')
+        model = tf.keras.models.load_model('./modelo.h5')
         #necessário para transformar o audio em waveform
         def decode_audio(audio_binary):
           # Decode WAV-encoded audio files to `float32` tensors, normalized
