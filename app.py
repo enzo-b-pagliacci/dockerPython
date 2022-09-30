@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from flask_restful import Resource, Api
+from flask_restful import Api
 from flask_cors import CORS
 import os
 import shutil
@@ -8,10 +8,15 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import models
 
-app = Flask(__name__)
+
+
+app = Flask("ChoroAPI")
+api = Api(app)
 
 cors = CORS(app, resources={r"/choro/*": {"origins": "*"}})
 
+app.secret_key = "secret key"
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 path = os.getcwd()
 # file Upload
@@ -22,9 +27,18 @@ if not os.path.isdir(UPLOAD_FOLDER):
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit(
+        '.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 @app.route('/choro')
-def hello():
-    return jsonify('Servidor online')
+def upload_form():
+    return jsonify('hello World')
+
 
 @app.route('/choro', methods=['POST'])
 def upload_file():
@@ -37,6 +51,7 @@ def upload_file():
 
         #método que transforma o arquivo de áudio para choro.wav
         main_folder = r'./uploads'
+        model_folder = r'./content'
 
         def rename_file(file):
           file_name, file_extension = os.path.splitext(file)
@@ -55,7 +70,9 @@ def upload_file():
             file_loop(root, dirs, xfiles)
 
         #método que irá ler o arquivo e mandar a I.A. predizer
-        model = tf.keras.models.load_model('./modelo.h5')
+        for root, dirs, xfiles in os.walk(model_folder):
+          for x in xfiles:
+            model = tf.keras.models.load_model(root + '/' + x)
         #necessário para transformar o audio em waveform
         def decode_audio(audio_binary):
           # Decode WAV-encoded audio files to `float32` tensors, normalized
@@ -71,7 +88,9 @@ def upload_file():
           waveform = decode_audio(audio_binary)
           return waveform
         #Onde passamos o path do arquivo .wab
-        waveform = get_waveform('./uploads/choro.wav')
+        for root, dirs, xfiles in os.walk(main_folder):
+          for x in xfiles:
+            waveform = get_waveform(root + '/' + x)
         #função utilitária para converter formas de onda em espectrogramas:
         def get_spectrogram(waveform):
           input_len = 16000
@@ -106,11 +125,12 @@ def upload_file():
         y_pred = np.argmax(model.predict(audio_ds), axis=1)
 
         indice = 0
+        
+        
 
-      
         # retorna a resposta da I.A. para o front end
-        return jsonify(y_pred[indice])  #
+        return jsonify(y_pred[indice])  
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=8000)
