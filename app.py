@@ -3,6 +3,7 @@ from flask_restful import Api
 from flask_cors import CORS
 import os
 import shutil
+import json
 
 import numpy as np
 import tensorflow as tf
@@ -51,7 +52,7 @@ def upload_file():
 
         #método que transforma o arquivo de áudio para choro.wav
         main_folder = r'./uploads'
-        model_folder = r'./content'
+
 
         def rename_file(file):
           file_name, file_extension = os.path.splitext(file)
@@ -70,9 +71,8 @@ def upload_file():
             file_loop(root, dirs, xfiles)
 
         #método que irá ler o arquivo e mandar a I.A. predizer
-        for root, dirs, xfiles in os.walk(model_folder):
-          for x in xfiles:
-            model = tf.keras.models.load_model(root + '/' + x)
+        model = tf.keras.models.load_model('./content/modelo.h5')
+
         #necessário para transformar o audio em waveform
         def decode_audio(audio_binary):
           # Decode WAV-encoded audio files to `float32` tensors, normalized
@@ -87,10 +87,12 @@ def upload_file():
           audio_binary = tf.io.read_file(file_path)
           waveform = decode_audio(audio_binary)
           return waveform
+
         #Onde passamos o path do arquivo .wab
         for root, dirs, xfiles in os.walk(main_folder):
           for x in xfiles:
             waveform = get_waveform(root + '/' + x)
+
         #função utilitária para converter formas de onda em espectrogramas:
         def get_spectrogram(waveform):
           input_len = 16000
@@ -126,10 +128,19 @@ def upload_file():
 
         indice = 0
         
+        predicao = y_pred[indice]
+
+        predicao = predicao.item()
+
+        resposta = {
+            "Fome": predicao
+        }
+
+        retornoAPI = json.dumps(resposta)
         
 
         # retorna a resposta da I.A. para o front end
-        return jsonify(y_pred[indice])  
+        return retornoAPI
 
 
 if __name__ == '__main__':
