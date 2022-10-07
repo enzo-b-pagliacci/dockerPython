@@ -88,11 +88,6 @@ def upload_file():
           waveform = decode_audio(audio_binary)
           return waveform
 
-        #Onde passamos o path do arquivo .wab
-        for root, dirs, xfiles in os.walk(main_folder):
-          for x in xfiles:
-            waveform = get_waveform(root + '/' + x)
-
         #função utilitária para converter formas de onda em espectrogramas:
         def get_spectrogram(waveform):
           input_len = 16000
@@ -116,31 +111,61 @@ def upload_file():
           spectrogram = spectrogram[..., tf.newaxis]
           return spectrogram
 
-        spectrogram = get_spectrogram(waveform)
-      
-        audio_ds = []
+        try:
+          #Onde passamos o path do arquivo .wav
+          try:
+            for root, dirs, xfiles in os.walk(main_folder):
+              for x in xfiles:
+                waveform = get_waveform(root + '/' + x)
+          except:
+            return jsonify('Não pegou o audio e passou o waveform')
 
-        audio_ds.append(spectrogram.numpy())
-        
-        audio_ds = np.array(audio_ds)
+          try:
+            spectrogram = get_spectrogram(waveform)
+          except:
+            return jsonify('Não pegou o espectrograma')
 
-        y_pred = np.argmax(model.predict(audio_ds), axis=1)
+          try:
+            audio_ds = []
 
-        indice = 0
-        
-        predicao = y_pred[indice]
+            audio_ds.append(spectrogram.numpy())
+          
+            audio_ds = np.array(audio_ds)
 
-        predicao = predicao.item()
+          except:
+            return jsonify('não mudou o shape')
 
-        resposta = {
-            "Fome": predicao
-        }
 
-        retornoAPI = json.dumps(resposta)
-        
+          try:
+            y_pred = np.argmax(model.predict(audio_ds), axis=1)
 
-        # retorna a resposta da I.A. para o front end
-        return retornoAPI
+            indice = 0
+
+          
+            predicao = y_pred[indice]
+          
+          except:
+            return jsonify('não conseguiu predizer')
+
+
+          try:
+            predicao = predicao.item()
+
+            resposta = {
+                "Fome": predicao
+            }
+
+            retornoAPI = json.dumps(resposta)
+            
+
+            # retorna a resposta da I.A. para o front end
+            return retornoAPI
+          
+          except:
+            return jsonify('não conseguiu converter e retornar')
+            
+        except:
+          return jsonify('não foi')
 
 
 if __name__ == '__main__':
