@@ -116,6 +116,8 @@ def upload_file():
           try:
             for root, dirs, xfiles in os.walk(main_folder):
               for x in xfiles:
+                while (root + '/' + x) != ('./uploads/choro.wav'):
+                  pass  
                 waveform = get_waveform(root + '/' + x)
           except:
             return jsonify('Não pegou o audio e passou o waveform')
