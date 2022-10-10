@@ -114,11 +114,22 @@ def upload_file():
         try:
           #Onde passamos o path do arquivo .wav
           try:
-            for root, dirs, xfiles in os.walk(main_folder):
-              for x in xfiles:
-                while (root + '/' + x) != ('./uploads/choro.wav'):
-                  pass  
-                waveform = get_waveform(root + '/' + x)
+            find = False
+            contador = 0
+            
+            while find == False:
+              for root, dirs, xfiles in os.walk(main_folder):
+                if xfiles == ['choro.wav']:
+                  find = True
+                  for x in xfiles:
+                    waveform = get_waveform(root + '/' + x)    
+                  
+                else:
+                  contador = contador + 1
+                  if contador > 70000:
+                    return jsonify('não recebeu o áudio')
+                  else:
+                    break
           except:
             return jsonify('Não pegou o audio e passou o waveform')
 
