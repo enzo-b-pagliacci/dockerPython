@@ -66,9 +66,11 @@ def upload_file():
               new_file_full_path = os.path.join(root, new_file_name)
               shutil.move(old_file_full_path, new_file_full_path)
              
-
-        for root, dirs, xfiles in os.walk(main_folder):
-            file_loop(root, dirs, xfiles)
+        try:
+          for root, dirs, xfiles in os.walk(main_folder):
+              file_loop(root, dirs, xfiles)
+        except:
+          return jsonify('Não transformou o áudio em .wav')
 
         #método que irá ler o arquivo e mandar a I.A. predizer
         model = tf.keras.models.load_model('./content/modelo.h5')
@@ -122,7 +124,7 @@ def upload_file():
                 if xfiles == ['choro.wav']:
                   find = True
                   for x in xfiles:
-                    waveform = get_waveform(root + '/' + x)    
+                    waveform = get_waveform(root + '/audiofome.wav')    
                   
                 else:
                   contador = contador + 1
