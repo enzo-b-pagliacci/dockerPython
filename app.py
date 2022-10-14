@@ -54,24 +54,6 @@ def upload_file():
         main_folder = r'./uploads'
 
 
-        def rename_file(file):
-          file_name, file_extension = os.path.splitext(file)
-          file_extension = ".wav"
-          return f'{file_name}{file_extension}'
-
-        def file_loop(root, dirs, xfiles):
-            for file in xfiles:
-              new_file_name = rename_file(file)
-              old_file_full_path = os.path.join(root, file)
-              new_file_full_path = os.path.join(root, new_file_name)
-              shutil.move(old_file_full_path, new_file_full_path)
-             
-        try:
-          for root, dirs, xfiles in os.walk(main_folder):
-              file_loop(root, dirs, xfiles)
-        except:
-          return jsonify('Não transformou o áudio em .wav')
-
         #método que irá ler o arquivo e mandar a I.A. predizer
         model = tf.keras.models.load_model('./content/modelo.h5')
 
@@ -113,27 +95,53 @@ def upload_file():
           spectrogram = spectrogram[..., tf.newaxis]
           return spectrogram
 
+
+
+        # renomear o arquivo 
+        def rename_file(file):
+          file_name, file_extension = os.path.splitext(file)
+          file_extension = ".wav"
+          return f'{file_name}{file_extension}'
+
+        def file_loop(root, dirs, xfiles):
+            for file in xfiles:
+              new_file_name = rename_file(file)
+              old_file_full_path = os.path.join(root, file)
+              new_file_full_path = os.path.join(root, new_file_name)
+              shutil.move(old_file_full_path, new_file_full_path)
+              waveform = get_waveform(new_file_full_path)
+              return waveform
+             
         try:
+          for root, dirs, xfiles in os.walk(main_folder):
+              waveform = file_loop(root, dirs, xfiles)
+        except:
+          return jsonify('Não transformou o áudio em .wav')
+
+        
+
+        try:
+          pass
           #Onde passamos o path do arquivo .wav
-          try:
-            find = False
-            contador = 0
+          # try:
+          #   find = False
+          #   contador = 0
             
-            while find == False:
-              for root, dirs, xfiles in os.walk(main_folder):
-                if xfiles == ['choro.wav']:
-                  find = True
-                  for x in xfiles:
-                    waveform = get_waveform(root + '/audiofome.wav')    
+          #   while find == False:
+          #     for root, dirs, xfiles in os.walk(main_folder):
+          #       if xfiles == ['choro.wav']:
+          #         find = True
+          #         for x in xfiles:
+                        
                   
-                else:
-                  contador = contador + 1
-                  if contador > 70000:
-                    return jsonify('não recebeu o áudio')
-                  else:
-                    break
-          except:
-            return jsonify('Não pegou o audio e passou o waveform')
+          #       else:
+          #         contador = contador + 1
+          #         if contador > 70000:
+          #           return jsonify('não recebeu o áudio')
+          #         else:
+          #           break
+          # except:
+          #   return jsonify('Não pegou o audio e passou o waveform')
 
           try:
             spectrogram = get_spectrogram(waveform)
